@@ -10,6 +10,15 @@ if not os.path.exists("SWAv2-CLI_userdata.json"):
     with open("SWAv2-CLI_userdata.json", "x") as f:
         f.write("")
 
+
+def get_pid_by_name(process_name):
+    import psutil
+    pids = []
+    for proc in psutil.process_iter(['pid', 'name']):
+        if proc.info['name'] == process_name:
+            pids.append(proc.info['pid'])
+    return pids
+
 def yn_question(prompt):
     question = input(prompt)
     while question.lower() != "y" and question.lower() != "n":
@@ -64,6 +73,7 @@ def try_add_game(gameId):
     else:
         print(f"Game found! ({gftr['name']})")
         print("Preparing to download...")
+        print(user)
         if user["is_guest"]:
             if gftr['access'] == "2":
                 print("This game is premium access only.")
@@ -125,9 +135,12 @@ def main():
             temp_userdata['steam-path'] = stp
             temp_userdata['code'] = ('SWA2-' if not swa_code.startswith('SWA2-') else '')+swa_code
             if swa_code != "":
-                userr = requests.post("https://swacloud.com/api/launcher/connect", data={"code":code})
+                userr = requests.post("https://swacloud.com/api/launcher/connect", json={"code":('SWA2-' if not swa_code.startswith('SWA2-') else '')+swa_code})
                 user = json.loads(userr.text)
-                temp_userdata["user"] = user
+                if user['success']:
+                    temp_userdata["user"] = user
+                else:
+                    print("Something went wrong! Your SWA2 code might have been entered incorrectly.")
             save_ud_config()
             print("Setup done!")
         elif args[1] == "add":

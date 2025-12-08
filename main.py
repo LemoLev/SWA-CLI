@@ -5,11 +5,42 @@ import requests
 from urllib.request import urlretrieve as download_url
 from zipfile import ZipFile
 
+version = "v1.0"
 temp_userdata = dict()
+
+
 if not os.path.exists("SWAv2-CLI_userdata.json"):
     with open("SWAv2-CLI_userdata.json", "x") as f:
         f.write("")
 
+def check_for_updates():
+    version_history = requests.get("https://pastebin.com/raw/WjST4yq5").text.split(">")
+    try:
+        vindex = version_history.index(version)
+        if vindex == 0:
+            print("You are on the latest version of SWA-CLI!")
+            return (False, "")
+        else:
+            print(f"You are on {version}, but the latest version is {version_history[0]}")
+            return (True, version_history[0])
+    except ValueError:
+        print(f"The version you are running ({version}) does not exist???")
+        return (False, "")
+        
+
+def update():
+    import subprocess
+    cfu = check_for_updates()
+    if cfu[0]:
+        print("Downloading new version...")
+        download_to_temp(f"https://github.com/LemoLev/SWA-CLI/releases/download/{cfu[1]}/swa-cli.exe", "swa-cli.exe")
+        with open(".\\temp\\updater.bat", 'w') as f:
+            f.write(f"timeout /t 2 > NUL\n")
+            f.write(f"copy /Y \".\\temp\\swa-cli.exe\" \"swa-cli.exe\"\n")
+            f.write(f"del \".\\temp\\swa-cli.exe\"\n")
+
+        subprocess.Popen([".\\temp\\updater.bat"], shell=True)
+        sys.exit(0)
 
 def get_pid_by_name(process_name):
     import psutil
@@ -150,6 +181,8 @@ def main():
                     try_add_game(args[3])
                 else:
                     print("Supply a Steam game ID to download")
+        elif args[1] == "update":
+            update()
         elif args[1] == "help" or args[1] == "-h" or args[1] == "--help":
             print("""Avaliable commands:
   swa-cli setup - Set up the environment (Steam path, SWAv2 code)

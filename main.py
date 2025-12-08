@@ -5,7 +5,7 @@ import requests
 from urllib.request import urlretrieve as download_url
 from zipfile import ZipFile
 
-version = "v1.1"
+version = "v1.1-HOTFIX"
 temp_userdata = dict()
 
 
